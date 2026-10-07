@@ -13,3 +13,8 @@ sudo apt install ansible sshpass
 
 # Ansible Installation auf client
 Nicht nötig. Nur ssh ist nötig
+
+# Ausführen eines Playbooks
+```shell
+ansible-playbook --user nico --ask-pass -i ./playbooks/hosts.ini ./playbooks/test.yml
+```

@@ -1,0 +1,9 @@
+---
+- name: Testverbindung zum Ubuntu Server
+  hosts: ubuntu_server
+  gather_facts: false
+
+  tasks:
+    - name: Verbindung prüfen und Nachricht ausgeben
+      ansible.builtin.debug:
+        msg: "Erfolgreich mit dem Ubuntu Server (192.168.178.68) verbunden!"
