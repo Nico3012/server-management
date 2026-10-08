@@ -25,3 +25,11 @@ Funktioniert mein Konzept auch, wenn ich nur einen managed Server kaufen kann? V
 Kriege ich root rechte wenn ich einen managed Server miete? In der Regel Nein!
 Wie funktioniert z.B. managed Nodejs von hostinger?
 Haben managed Server eine Laufzeit wenn man die in der Cloud mietet? Nein, bleibt oft aber nicht der gleiche Server
+
+
+# Verifizierung gegenüber Industriestandards
+
+KI Prompt / Erklärung des Konzepts (Stand meines Verständnisses 08.10.2026):
+
+Sag mir mal ob so ein typischer large scale tech stack funktioniert:
+Server mit Betriebssystem ggf. ist da noch ein hypervisor drunter (muss aber nicht) und das OS hat eine Laufzeit X für die es support gibt. Z.b. ubuntu LTS Zeitraum und in der Zeit wird es von ansible verwaltet. Also ansible führt sicherheitsupdates aus und ggef funktionsupdates und stellt sicher, dass z.B. system container oder vm software installiert ist bzw. die server laufen. Und da drin läuft dann kubernetes, welches sicherstellt, dass mehrere dieser einheiten über wartungszeiträume hinweg voll verfügbar sind. Ist das so richtig?
