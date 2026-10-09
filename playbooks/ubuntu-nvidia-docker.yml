@@ -1,8 +1,20 @@
 ---
-- name: Ubuntu Server HWE-Kernel, Systemupdate und Nvidia-Treiber sicher installieren
+- name: Ubuntu Server Wartung - Kernel, Nvidia-Treiber, Docker & Nvidia CDI Setup
   hosts: all
   become: true
   tasks:
+
+    # -------------------------------------------------------------
+    # PHASE 0: Laufenden Docker-Dienst vorab beenden
+    # -------------------------------------------------------------
+    - name: Prüfen, welche Systemd-Dienste existieren
+      ansible.builtin.service_facts:
+
+    - name: Docker-Dienst vor Wartung und Upgrades stoppen (falls vorhanden)
+      ansible.builtin.systemd_service:
+        name: docker
+        state: stopped
+      when: "'docker.service' in ansible_facts.services"
 
     # -------------------------------------------------------------
     # PHASE 1: HWE-Kernel & System auf den neuesten Stand bringen
@@ -17,6 +29,9 @@
         name:
           - "linux-generic-hwe-{{ ansible_distribution_version }}"
           - ubuntu-drivers-common
+          - ca-certificates
+          - curl
+          - gnupg
         state: present
         install_recommends: yes
 
@@ -32,7 +47,7 @@
       register: reboot_after_kernel
 
     # ZWISCHEN-REBOOT: Startet den Server direkt in den neuen HWE-Kernel
-    - name: Zwischen-Neustart durchführen (in den neuen Kernel booten)
+    - name: Zwischen-Neustart durchführen (in den neuen HWE-Kernel booten)
       ansible.builtin.reboot:
         msg: "Zwischen-Neustart durch Ansible (Boot in neuen HWE-Kernel vor Nvidia-Installation)"
         connect_timeout: 5
@@ -64,3 +79,97 @@
         pre_reboot_delay: 0
         post_reboot_delay: 15
       when: reboot_after_drivers.stat.exists
+
+    # -------------------------------------------------------------
+    # PHASE 3: Docker CE nach offizieller Dokumentation
+    # -------------------------------------------------------------
+    - name: Docker Keyring-Verzeichnis anlegen (/etc/apt/keyrings)
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Offiziellen Docker GPG-Schlüssel herunterladen
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Docker APT-Repository einrichten
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }} signed-by=/etc/apt/keyrings/docker.asc]
+          https://download.docker.com/linux/ubuntu
+          {{ ansible_distribution_release }}
+          stable
+        filename: docker
+        state: present
+        update_cache: yes
+
+    - name: Docker Engine & Plugins installieren (automatisch neueste Version)
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    # -------------------------------------------------------------
+    # PHASE 4: NVIDIA Container Toolkit & CDI-Dateien aktualisieren
+    # -------------------------------------------------------------
+    - name: NVIDIA Container Toolkit GPG-Schlüssel herunterladen & de-armoren
+      ansible.builtin.shell: |
+        set -o pipefail
+        curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      args:
+        executable: /bin/bash
+        creates: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+
+    - name: NVIDIA Container Toolkit Repository einbinden
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg]
+          https://nvidia.github.io/libnvidia-container/stable/deb/amd64/
+          /
+        filename: nvidia-container-toolkit
+        state: present
+        update_cache: yes
+
+    - name: NVIDIA Container Toolkit installieren (automatisch neueste Version)
+      ansible.builtin.apt:
+        name: nvidia-container-toolkit
+        state: present
+
+    - name: CDI-Verzeichnis sicherstellen (/etc/cdi)
+      ansible.builtin.file:
+        path: /etc/cdi
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Aktuelle CDI-Spezifikation für vorhandene Hardware generieren
+      ansible.builtin.command:
+        cmd: nvidia-ctk cdi generate
+      register: cdi_generated_spec
+      changed_when: false
+
+    - name: CDI-Spezifikation in /etc/cdi/nvidia.yaml ablegen (idempotente Aktualisierung)
+      ansible.builtin.copy:
+        dest: /etc/cdi/nvidia.yaml
+        content: "{{ cdi_generated_spec.stdout }}\n"
+        owner: root
+        group: root
+        mode: "0644"
+      register: cdi_file_status
+
+    # -------------------------------------------------------------
+    # PHASE 5: Docker final starten / neu starten
+    # -------------------------------------------------------------
+    - name: Docker-Dienst starten und aktivieren (liest frische CDI-Spezifikationen ein)
+      ansible.builtin.systemd_service:
+        name: docker
+        state: restarted
+        enabled: yes
