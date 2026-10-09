@@ -46,7 +46,7 @@
     # Hier könnte ein neuer Treiber für meine Kombi aus Kernel und Hardware empfohlen worden sein und wird dann installiert
     # -------------------------------------------------------------
     - name: Empfohlenen Nvidia-Treiber auf neuem Kernel installieren
-      ansible.builtin.command: ubuntu-drivers install --gpgpu
+      ansible.builtin.command: ubuntu-drivers install
       register: ubuntu_drivers_result
       changed_when: "'Installing' in ubuntu_drivers_result.stdout or 'installed' in ubuntu_drivers_result.stdout"
 
