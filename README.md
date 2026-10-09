@@ -16,9 +16,7 @@ Nicht nötig. Nur ssh ist nötig
 
 # Ausführen eines Playbooks
 ```shell
-ansible-playbook --user nico --ask-pass --ask-become-pass -i ./playbooks/hosts.ini ./playbooks/ubuntu-nvidia.yml
-
-ansible-playbook --user root --ask-pass -i ./playbooks/hosts.ini ./playbooks/ubuntu-nvidia.yml
+ansible-playbook --user root --ask-pass -i ./playbooks/hosts.ini ./playbooks/ubuntu-nvidia-docker.yml
 ```
 
 
