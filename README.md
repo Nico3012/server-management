@@ -16,5 +16,15 @@ Nicht nötig. Nur ssh ist nötig
 
 # Ausführen eines Playbooks
 ```shell
-ansible-playbook --user nico --ask-pass -i ./playbooks/hosts.ini ./playbooks/test.yml
+ansible-playbook --user nico --ask-pass --ask-become-pass -i ./playbooks/hosts.ini ./playbooks/ubuntu-nvidia.yml
+
+ansible-playbook --user root --ask-pass -i ./playbooks/hosts.ini ./playbooks/ubuntu-nvidia.yml
 ```
+
+
+
+
+# Server auf Englisch umstellen
+ssh nico@192.168.178.68
+sudo locale-gen en_US.UTF-8
+sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
