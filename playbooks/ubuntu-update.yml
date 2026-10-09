@@ -1,0 +1,41 @@
+---
+- name: Ubuntu Server HWE-Kernel aktivieren und System aktualisieren
+  hosts: all
+  become: true
+  tasks:
+
+    # 1. Paket-Repository-Cache aktualisieren
+    - name: APT-Cache aktualisieren
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    # 2. HWE-Kernel Metapaket installieren (dynamisch für die jeweilige LTS-Version)
+    - name: HWE-Kernel Metapaket installieren
+      ansible.builtin.apt:
+        name: "linux-generic-hwe-{{ ansible_distribution_version }}"
+        state: present
+        install_recommends: yes
+
+    # 3. Vollständiges Systemupdate (entspricht 'apt full-upgrade')
+    - name: Alle Pakete auf den neuesten Stand bringen (full-upgrade)
+      ansible.builtin.apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+
+    # 4. Prüfen, ob durch Kernel- oder Paket-Updates ein Neustart nötig ist
+    - name: Prüfen, ob ein Neustart erforderlich ist
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+
+    # 5. Kontrollierter Neustart, falls erforderlich
+    - name: Server neustarten, falls Kernel/Updates dies erfordern
+      ansible.builtin.reboot:
+        msg: "Neustart durch Ansible initiiert (HWE-Kernel / Systemupdates)"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 15
+      when: reboot_required_file.stat.exists
