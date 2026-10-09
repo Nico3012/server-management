@@ -1,0 +1,66 @@
+---
+- name: Ubuntu Server HWE-Kernel, Systemupdate und Nvidia-Treiber sicher installieren
+  hosts: all
+  become: true
+  tasks:
+
+    # -------------------------------------------------------------
+    # PHASE 1: HWE-Kernel & System auf den neuesten Stand bringen
+    # -------------------------------------------------------------
+    - name: APT-Cache aktualisieren
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: HWE-Kernel und ubuntu-drivers-common installieren
+      ansible.builtin.apt:
+        name:
+          - "linux-generic-hwe-{{ ansible_distribution_version }}"
+          - ubuntu-drivers-common
+        state: present
+        install_recommends: yes
+
+    - name: Alle Pakete und Kernel aktualisieren (full-upgrade)
+      ansible.builtin.apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+
+    - name: Prüfen, ob nach dem Kernel-Upgrade ein Neustart nötig ist
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_after_kernel
+
+    # ZWISCHEN-REBOOT: Startet den Server direkt in den neuen HWE-Kernel
+    - name: Zwischen-Neustart durchführen (in den neuen Kernel booten)
+      ansible.builtin.reboot:
+        msg: "Zwischen-Neustart durch Ansible (Boot in neuen HWE-Kernel vor Nvidia-Installation)"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 15
+      when: reboot_after_kernel.stat.exists
+
+    # -------------------------------------------------------------
+    # PHASE 2: Nvidia-Treiber auf dem laufenden HWE-Kernel installieren
+    # Hier könnte ein neuer Treiber für meine Kombi aus Kernel und Hardware empfohlen worden sein und wird dann installiert
+    # -------------------------------------------------------------
+    - name: Empfohlenen Nvidia-Treiber auf neuem Kernel installieren
+      ansible.builtin.command: ubuntu-drivers install --gpgpu
+      register: ubuntu_drivers_result
+      changed_when: "'Installing' in ubuntu_drivers_result.stdout or 'installed' in ubuntu_drivers_result.stdout"
+
+    - name: Prüfen, ob nach der Treiber-Installation ein Neustart nötig ist
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_after_drivers
+
+    # FINALER REBOOT: Lädt den frisch installierten Nvidia-Treiber sauber
+    - name: Finaler Neustart durchführen (Nvidia-Treiber laden)
+      ansible.builtin.reboot:
+        msg: "Finaler Neustart durch Ansible (Nvidia-Treiber aktivieren)"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 15
+      when: reboot_after_drivers.stat.exists
