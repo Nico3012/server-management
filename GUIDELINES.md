@@ -20,11 +20,14 @@ Wie wird diese Einheit nun in ein standardisiertes Format gebracht, dass dann st
 
 
 
-Themen, die ich noch klären muss:
-Funktioniert mein Konzept auch, wenn ich nur einen managed Server kaufen kann? Vsl. nein!
-Kriege ich root rechte wenn ich einen managed Server miete? In der Regel Nein!
-Wie funktioniert z.B. managed Nodejs von hostinger?
-Haben managed Server eine Laufzeit wenn man die in der Cloud mietet? Nein, bleibt oft aber nicht der gleiche Server
+Anmerkungen zu Update typen und Rückwärtskompatibilität (Noch nicht bestätigt):
+Für den Linux Kernel ist garantiert, dass dieser zum User space hin eine rückwärtskompatible Api bietet. Das bedeutet, ich kann auch mit dem neusten Kernel alte Container laufen lassen
+Beim Einfügen von CDI Geräten in den Container muss das nochmal gesondert evaluiert werden. Wenn der z.B. Grafikkartentreiber, der gemountet wird keine Rückwärtskompatibilität bietet, darf dieser nicht automatisiert mit Funktionsupdates versorgt werden. Unter Umständen kann das bedeuten, dass der Kernel inkl. seiner Treiber, die mittels CDI übergeben werden keine Funktionsupdates erhalten darf sondern nur Sicherheitsupdates. Dabei ist dann zu beachten, den Support Zeitraum klein zu halten weil neuere Container Images auch neuere Kernelfeatures vorraussetzen können.
+Ideen um das zu lösen:
+- Unterteilung in Up to date branch, der z.B. in VM läuft. Da ist immer der neuste Kernel vorhanden. Z.b. rolling release distro aber keine Hardware Features
+- Und bare metal runtime: Da können die Treiber limitieren. Daher nicht zwingend komplett up to date. Dafür auch cdi geräte verfügbar
+
+
 
 
 # Verifizierung gegenüber Industriestandards
