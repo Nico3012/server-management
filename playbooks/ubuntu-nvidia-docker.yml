@@ -1,3 +1,5 @@
+# Der Linux Kernel, und auch der Nvidia Treiber sind beide hervorragend rückwärtskompatibel. Daher versucht dieses Playbook Ubuntu so zu konfigurieren, dass immer der neuste HWE kernel installiert wird und auch immer der neuste Nvidia Treiber installiert wird inkl. dem aktualisieren der cdi spezifikationen mit dem nvidia container toolkit und dem neustarten der docker services, damit diese die neue cdi Spezifikation lesen.
+
 ---
 - name: Ubuntu Server Wartung - Kernel, Nvidia-Treiber, Docker & Nvidia CDI Setup
   hosts: all
