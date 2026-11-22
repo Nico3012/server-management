@@ -37,6 +37,8 @@ Beispiele für Bereitstellungshardware und was dann speziell an Wartung anfällt
 
 3. Selbstbau System:
 
-   Z.B. Minipc wie Lenovo ThinkCentre und dann ein JetKVM Mini davor geschaltet. Der JetKVM ermöglicht den Zugriff auf das BIOS über das private Netzwerk. Zudem können USB devices für BIOS files oder ISO images über dieses Gerät über das private Netzwerk gemountet werden.
+   Z.B. Minipc wie Lenovo ThinkCentre und dann ein JetKVM Mini oder GL.iNet Comet (GL-RM1) davor geschaltet. Der kvm over ip ermöglicht den Zugriff auf das BIOS über das private Netzwerk. Zudem können USB devices für BIOS files oder ISO images über dieses Gerät über das private Netzwerk gemountet werden. Der JetKVM Mini oder GL.iNet Comet (GL-RM1) ist auch gefährdet, da er über usb, hdmi, ... mit dem Server verbunden ist und muss daher auch regelmäßig Sicherheitsupdates durchführen. Das ist über das Webinterface von diesem möglich.
+
+   https://www.gl-inet.com/de-de/products/gl-rm1pe
 
    Keine klassische Serverhardware aber deutlich günstiger in Gesamt als ein out of the Box System.

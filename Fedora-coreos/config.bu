@@ -1,0 +1,14 @@
+variant: fcos
+version: 1.6.0
+passwd:
+  users:
+    - name: core
+      # Password für 301202. Erstelle mit `openssl passwd -6`
+      password_hash: "$6$quosUPLj89/aJPxV$yHAyuyAXAtN3W4/smsmLPtmtCh9xpDSidJU78qwK39ZpFGvtKxQ54SjDjPAL9kRcDeq8qWLw8dBii37ylDb480"
+storage:
+  files:
+    - path: /etc/ssh/sshd_config.d/20-enable-passwords.conf
+      mode: 0644
+      contents:
+        inline: |
+          PasswordAuthentication yes
